@@ -1,6 +1,6 @@
 <?php
 
-require_once('app/Models/Organisateur.php');
+require_once('app/Models/Visiteur.php');
 require_once('app/Models/Panier.php');
 require_once('app/Models/Event.php');
 
@@ -14,9 +14,9 @@ header("Access-Control-Allow-Headers: * ");
 class PanierController {
     public function all(){
         $data = json_decode(file_get_contents('php://input'));
-        $idOrganisateur = $data->idOrganisateur;
+        $idVisiteur = $data->idVisiteur;
         $e = new Panier();
-        $res = $e->getAll($idOrganisateur);
+        $res = $e->getAll($idVisiteur);
         if ($res) {
             $array = array();
             $array['data'] = array();
@@ -25,9 +25,11 @@ class PanierController {
                 extract($row);
                 $event = array(
                     'nomEvent'=>$nomEvent,
+                    'villeEvent'=>$villeEvent,
                     'tarif'=>$tarif,
                     'img'=>$img,
-                    'idOrganisateur'=>$idOrganisateur,
+                    'dateDebut'=>$dateDebut,
+                    'idVisiteur'=>$idVisiteur,
                     'idEvent' => $idEvent,
                     'idPanier' => $idPanier,
                     'qte' => $qte,
@@ -45,10 +47,10 @@ class PanierController {
 
     public function ticketsById() {
         $data = json_decode(file_get_contents('php://input'));
-        $idOrganisateur = $data->idOrganisateur;
-        echo json_encode(array("msg"=> $idOrganisateur));
+        $idVisiteur = $data->idVisiteur;
+        echo json_encode(array("msg"=> $idVisiteur));
         $e = new Panier();
-        $res = $e->ticketsById($idOrganisateur);
+        $res = $e->ticketsById($idVisiteur);
         if ($res) {
             $array = array();
             $array['data'] = array();
@@ -59,7 +61,7 @@ class PanierController {
                     'nomEvent'=>$nomEvent,
                     'tarif'=>$tarif,
                     'img'=>$img,
-                    'idOrganisateur'=>$idOrganisateur,
+                    'idVisiteur'=>$idVisiteur,
                     'idEvent' => $idEvent
                 );
                 array_push($array['data'],$event);
@@ -74,12 +76,13 @@ class PanierController {
 
     public function add() {
         $data = json_decode(file_get_contents('php://input'));
+        // $idVisiteur = $_POST['idVisiteur'];
         $idEvent = $data->idEvent;
-        $idOrganisateur = $data->idOrganisateur;
+        $idVisiteur = $data->idVisiteur;
         $tarif = $data->tarif;
 
         $e = new Panier();
-        $row = $e->addToPanier($idEvent, $idOrganisateur, $qte=1, $tarif);
+        $row = $e->addToPanier($idEvent, $idVisiteur, $qte=1, $tarif);
         if($row) {
             echo json_encode(array('msg'=>'it\'s added to the panier now'));
         }else {
@@ -153,4 +156,61 @@ class PanierController {
             echo json_encode(array('msg'=> 'noooooooo'));
         }
     }
-}
+
+    public function total () {
+        $data = json_decode(file_get_contents('php://input'));
+        $idVisiteur = $data->idVisiteur;
+        $event = new Panier();
+        $row = $event->total($idVisiteur);
+        if($row) {
+            $array = array();
+            $array['d'] = array();
+            $t = 0;
+            while ( $res = $row->fetch(PDO::FETCH_ASSOC) ) {
+                extract($res);
+                $info = array(
+                    // 'idVisiteur'=>$idVisiteur,
+                    'tarif'=>$tarif,
+                    // 'idEvent'=>$idEvent
+                );
+                array_push($array['d'],$info);
+                for ($i=0; $i < count($array); $i++){
+                    // echo json_encode($tarif);
+                    $t += $tarif;
+                }
+            }
+            echo json_encode($t);
+        }else {
+            echo json_encode(array('msg'=>'no id'));
+        }
+        }
+
+        public function eventsInTicket() {
+            $data = json_decode(file_get_contents('php://input'));
+            // $idEvent = $data->idEvent;
+            $ticket = new Panier();
+            $row = $ticket->eventsIncart();
+            if ($row) {
+                $array = array();
+                $array['data'] = array();
+
+                while ($result = $row->fetch(PDO::FETCH_ASSOC)) {
+                    extract($result);
+                    $t = array(
+                        'nomEvent'=>$nomEvent,
+                        'villeEvent'=>$villeEvent,
+                        'typeEvent'=>$typeEvent,
+                        'dateDebut'=>$dateDebut,
+                        'tarif'=>$tarif,
+                        'username'=>$username
+                        // 'idEvent' => $idEvent
+                    );
+                    array_push($array['data'],$t);
+                }
+            echo json_encode($array);
+            }else {
+                echo json_encode(array('msg'=>'erreuuuuuur'));
+            }
+        }
+
+    }

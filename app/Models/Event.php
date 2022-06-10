@@ -25,8 +25,16 @@ class Event extends Base{
     }
 
     public function getAllEvents() {
-        $query = "SELECT nomEvent, typeEvent, villeEvent, dateDebut, tarif, img, idOrganisateur, idEvent FROM $this->table";
+        $query = "SELECT evenement.nomEvent, evenement.typeEvent, evenement.villeEvent, evenement.dateDebut, evenement.tarif, evenement.img, evenement.idOrganisateur, evenement.idEvent FROM $this->table";
         $stmt = $this->con->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    public function search ($nomEvent) {
+        $query = "SELECT * FROM $this->table WHERE nomEvent=:nomEvent ";
+        $stmt = $this->con->prepare($query);
+        $stmt->bindParam(':nomEvent',$nomEvent);
         $stmt->execute();
         return $stmt;
     }
@@ -79,6 +87,4 @@ class Event extends Base{
         $stmt = $this->con->prepare($query);
         return $stmt->execute();
     }
-
-
 }

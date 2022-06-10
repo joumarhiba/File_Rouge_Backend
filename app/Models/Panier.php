@@ -10,7 +10,7 @@ class Panier extends Base{
     public $idEvent;
     public $nomEvent;
     public $tarif;
-    public $idOrganisateur;
+    public $idVisiteur;
 
     /**
      * Constructeur pour la connexion à la base de données
@@ -18,25 +18,36 @@ class Panier extends Base{
     public function __construct(){
         $this->con = $this->connect();
     }
-
-    public function getAll($idOrganisateur) {
-        $query = "SELECT evenement.nomEvent, panier.tarif, evenement.img,panier.qte, panier.idOrganisateur, panier.idEvent, panier.idPanier FROM $this->table INNER JOIN evenement ON panier.idEvent=evenement.idEvent WHERE panier.idOrganisateur= :idOrganisateur";
+    public function eventsIncart() {
+        $query = "SELECT $this->table.idEvent, evenement.nomEvent, evenement.typeEvent, evenement.villeEvent, evenement.dateDebut, evenement.tarif, organisateur.username
+        FROM evenement
+        INNER JOIN $this->table ON evenement.idEvent= $this->table.idEvent
+        INNER JOIN organisateur ON evenement.idOrganisateur = organisateur.idOrganisateur
+        WHERE $this->table.idEvent= :idEvent ";
         $stmt = $this->con->prepare($query);
-        $stmt->bindValue(':idOrganisateur',$idOrganisateur);
+        $stmt->bindParam(':idEvent',$idEvent);
         $stmt->execute();
         return $stmt;
     }
 
-    public function ticketsById($idOrganisateur) {
-        $query = "SELECT evenement.nomEvent, evenement.tarif, evenement.img, $this->table.idOrganisateur, $this->table.idEvent FROM $this->table INNER JOIN evenement ON panier.idEvent=evenement.idEvent WHERE evenement.idOrganisateur=:idOrganisateur" ;
+    public function getAll($idVisiteur) {
+        $query = "SELECT evenement.nomEvent,evenement.dateDebut, evenement.villeEvent, panier.tarif, evenement.img,panier.qte, panier.idVisiteur, panier.idEvent, panier.idPanier FROM $this->table INNER JOIN evenement ON panier.idEvent=evenement.idEvent WHERE panier.idVisiteur= :idVisiteur";
         $stmt = $this->con->prepare($query);
-        $stmt->bindParam(':idOrganisateur',$idOrganisateur);
+        $stmt->bindValue(':idVisiteur',$idVisiteur);
         $stmt->execute();
         return $stmt;
     }
 
-    public function addToPanier($idEvent, $idOrganisateur ,$qte, $tarif) {
-        $query = "INSERT INTO $this->table SET idEvent='$idEvent', idOrganisateur='$idOrganisateur' , qte = '$qte', tarif='$tarif'";
+    public function ticketsById($idVisiteur) {
+        $query = "SELECT evenement.nomEvent, evenement.tarif, evenement.img, $this->table.idVisiteur, $this->table.idEvent FROM $this->table INNER JOIN evenement ON panier.idEvent=evenement.idEvent WHERE evenement.idVisiteur=:idVisiteur" ;
+        $stmt = $this->con->prepare($query);
+        $stmt->bindParam(':idVisiteur',$idVisiteur);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    public function addToPanier($idEvent, $idVisiteur ,$qte, $tarif) {
+        $query = "INSERT INTO $this->table SET idEvent='$idEvent', idVisiteur='$idVisiteur' , qte = '$qte', tarif='$tarif'";
         $stmt = $this->con->prepare($query);
         return $stmt->execute();
     }
@@ -75,4 +86,12 @@ class Panier extends Base{
         $stmt = $this->con->prepare($query);
         return $stmt->execute();
     }
+
+    public function total ($idVisiteur) {
+        $query = "SELECT * FROM $this->table WHERE idVisiteur = :idVisiteur";
+        $stmt = $this->con->prepare($query);
+        $stmt->bindValue(':idVisiteur',$idVisiteur);
+        $stmt->execute();
+        return $stmt;
+}
 }

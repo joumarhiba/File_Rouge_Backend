@@ -13,32 +13,34 @@ header("Access-Control-Allow-Headers: * ");
 
 class EventController {
     public function all(){
-        $e = new Event();
-        $res = $e->getAllEvents();
-        if ($res) {
-            $array = array();
-            $array['data'] = array();
+        // $data = json_decode(file_get_contents('php://input'));
+    $e = new Event();
+    $res = $e->getAllEvents();
+    if ($res) {
+        $array = array();
+        $array['data'] = array();
 
-            while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
-                extract($row);
-                $event = array(
-                    'nomEvent'=>$nomEvent,
-                    'villeEvent'=>$villeEvent,
-                    'typeEvent'=>$typeEvent,
-                    'dateDebut'=>$dateDebut,
-                    'tarif'=>$tarif,
-                    'img'=>$img,
-                    'idOrganisateur'=>$idOrganisateur,
-                    'idEvent' => $idEvent
-                );
-                array_push($array['data'],$event);
-            }
-        echo json_encode($array);
-        }else {
-            echo json_encode(
-                array('message'=>'no data event ...........')
+        while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
+            extract($row);
+            $event = array(
+                'nomEvent'=>$nomEvent,
+                'villeEvent'=>$villeEvent,
+                'typeEvent'=>$typeEvent,
+                'dateDebut'=>$dateDebut,
+                'tarif'=>$tarif,
+                'img'=>$img,
+                'idOrganisateur'=>$idOrganisateur,
+                'idEvent' => $idEvent,
+                // 'idVisiteur' => $idVisiteur
             );
+            array_push($array['data'],$event);
         }
+    echo json_encode($array);
+    }else {
+        echo json_encode(
+            array('message'=>'no data event ...........')
+        );
+    }
     }
 
     public function add () {
@@ -166,4 +168,33 @@ class EventController {
         }
     }
 
+    public function search () {
+        $data = json_decode(file_get_contents('php://input'));
+        if (!empty($data->key) ) {
+            $key = $data->key;
+    }
+    $events = new Event();
+    $row = $events->search($key);
+            $searched = array();
+            $searched['data'] = array();
+    if($row) {
+        while($result = $row->fetch(PDO::FETCH_ASSOC)){
+            extract($result);
+            $event = array(
+                'nomEvent'=>$key,
+                'villeEvent'=>$villeEvent,
+                'typeEvent'=>$typeEvent,
+                'dateDebut'=>$dateDebut,
+                'tarif'=>$tarif,
+                'img'=>$img,
+                'idOrganisateur'=>$idOrganisateur,
+                'idEvent' => $idEvent
+            );
+            array_push($searched['data'],$event);
+        }
+        echo json_encode(array('msg'=>$searched));
+    }else {
+        echo json_encode(array('msg'=>$row));
+    }
+ }
 }
